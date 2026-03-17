@@ -9,7 +9,7 @@
 *.got
 build
 profile
-betterleaks
+/betterleaks
 
 # configs
 .gitleaks.toml
