@@ -138,6 +138,10 @@ type Detector struct {
 	// NoColor is a flag to disable color output
 	NoColor bool
 
+	// PrintFinding is an optional callback for displaying findings during scanning.
+	// If nil, findings are collected silently. Set by CLI commands that need output.
+	PrintFinding func(f report.Finding)
+
 	// ValidationStatusFilter, when non-empty, restricts which findings are
 	// printed in verbose mode. Parsed from --validation-status.
 	ValidationStatusFilter map[string]struct{}
@@ -323,8 +327,8 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 			if f.ValidationStatus != "" {
 				d.ValidationCounts[f.ValidationStatus]++
 			}
-			if d.shouldVerbosePrint(f) {
-				printFinding(f, d.NoColor, d.Redact)
+			if d.shouldVerbosePrint(f) && d.PrintFinding != nil {
+				d.PrintFinding(f)
 			}
 		}
 	}()
