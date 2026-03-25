@@ -336,6 +336,11 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
 		logging.Fatal().Err(err).Send()
 	}
+
+	// Wire up the display callback so detect/ doesn't need lipgloss.
+	detector.PrintFinding = func(f report.Finding) {
+		report.PrintFinding(f, detector.NoColor, detector.Redact)
+	}
 	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
 		logging.Fatal().Err(err).Send()
 	}

@@ -1,12 +1,10 @@
 package report
 
 import (
-	"fmt"
 	"math"
 	"strings"
 
-	"github.com/betterleaks/betterleaks/sources"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/betterleaks/betterleaks/fragment"
 )
 
 // Finding contains a whole bunch of information about a secret finding.
@@ -54,7 +52,7 @@ type Finding struct {
 
 	// Fragment used for multi-part rule checking, CEL filtering,
 	// and eventually ML validation
-	Fragment *sources.Fragment `json:",omitempty"`
+	Fragment *fragment.Fragment `json:",omitempty"`
 
 	// RequiredSets holds the Cartesian-product combinations of required findings.
 	// Each set is one complete group of components that can be validated independently.
@@ -183,92 +181,5 @@ func MaskSecret(secret string, percent uint) string {
 	return secret[:lth] + "..."
 }
 
-func (f *Finding) PrintRequiredFindings(noColor bool, redact uint) {
-	if len(f.RequiredSets) == 0 {
-		return
-	}
-
-	fmt.Println("Required:")
-
-	orangeStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#bf9478"))
-	if noColor {
-		orangeStyle = lipgloss.NewStyle()
-	}
-
-	for _, set := range f.RequiredSets {
-		statusSuffix := ""
-		if set.ValidationStatus != "" {
-			statusSuffix = " " + formatSetStatus(set.ValidationStatus, noColor)
-		}
-
-		if len(set.Components) == 1 {
-			// Single-component set: inline on the bullet line.
-			comp := set.Components[0]
-			secret := redactForDisplay(comp.Secret, redact)
-			fmt.Printf("  - %s:%d: %s%s\n", comp.RuleID, comp.StartLine, orangeStyle.Render(secret), statusSuffix)
-			continue
-		}
-
-		// Multi-component set: status on the bullet, components indented below.
-		if statusSuffix != "" {
-			fmt.Printf("  - %s\n", formatSetStatus(set.ValidationStatus, noColor))
-		} else {
-			fmt.Println("  -")
-		}
-
-		maxLabelLen := 0
-		for _, comp := range set.Components {
-			label := fmt.Sprintf("%s:%d:", comp.RuleID, comp.StartLine)
-			if len(label) > maxLabelLen {
-				maxLabelLen = len(label)
-			}
-		}
-
-		for _, comp := range set.Components {
-			secret := redactForDisplay(comp.Secret, redact)
-			label := fmt.Sprintf("%s:%d:", comp.RuleID, comp.StartLine)
-			fmt.Printf("    %-*s %s\n", maxLabelLen, label, orangeStyle.Render(secret))
-		}
-	}
-}
-
-// redactForDisplay returns a display-safe version of a secret, applying
-// truncation and optional redaction without mutating the original.
-func redactForDisplay(secret string, redact uint) string {
-	if redact > 0 {
-		if redact >= 100 {
-			return "REDACTED"
-		}
-		secret = MaskSecret(secret, redact)
-	}
-	return truncateSecret(secret)
-}
-
-func truncateSecret(s string) string {
-	s = strings.TrimSpace(s)
-	if len(s) > 40 {
-		return s[:37] + "..."
-	}
-	return s
-}
-
-// formatSetStatus returns a styled status string for a required set header.
-func formatSetStatus(status string, noColor bool) string {
-	if noColor {
-		return "[" + strings.ToUpper(status) + "]"
-	}
-	var style lipgloss.Style
-	switch status {
-	case "valid":
-		style = lipgloss.NewStyle().Foreground(lipgloss.Color("#00d26a"))
-	case "invalid":
-		style = lipgloss.NewStyle().Foreground(lipgloss.Color("#888888"))
-	case "revoked":
-		style = lipgloss.NewStyle().Foreground(lipgloss.Color("#f5d445"))
-	case "error":
-		style = lipgloss.NewStyle().Foreground(lipgloss.Color("#f05c07"))
-	default:
-		style = lipgloss.NewStyle().Foreground(lipgloss.Color("#c0c0c0"))
-	}
-	return style.Render("[" + strings.ToUpper(status) + "]")
-}
+// PrintRequiredFindings, redactForDisplay, truncateSecret, and formatSetStatus
+// are in display.go to keep lipgloss out of this file's import graph.
