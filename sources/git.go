@@ -285,6 +285,10 @@ type Git struct {
 	MaxArchiveDepth int
 }
 
+// IsGitSource is a marker method that allows detect/ to identify git sources
+// via interface assertion without importing the concrete Git type.
+func (s *Git) IsGitSource() {}
+
 // Fragments yields fragments from a git repo
 func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	defer func() {

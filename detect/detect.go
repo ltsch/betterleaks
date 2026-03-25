@@ -374,7 +374,12 @@ func (d *Detector) DetectSource(ctx context.Context, source fragment.Source) ([]
 		return nil
 	})
 
-	if len(d.commitMap) > 0 {
+	// Log commit stats for git-based sources. The gitSource interface is
+	// satisfied by sources.Git without requiring detect/ to import sources/.
+	type gitSource interface {
+		IsGitSource()
+	}
+	if _, isGit := source.(gitSource); isGit && len(d.commitMap) > 0 {
 		logging.Info().Msgf("%d commits scanned.", len(d.commitMap))
 		logging.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
 	}
