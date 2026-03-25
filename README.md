@@ -1,3 +1,14 @@
+# Betterleaks (ltsch fork)
+
+## Fork Changes
+
+This fork includes the following changes not yet in upstream [`betterleaks/betterleaks`](https://github.com/betterleaks/betterleaks):
+
+- **Removed wazero/go-re2 WASM dependency** — Go's stdlib `regexp` provides identical RE2-compatible linear-time matching and is [5-40x faster](https://github.com/betterleaks/betterleaks/pull/72#issuecomment-4129459987) in benchmarks. Removes ~5MB from the binary.
+- **Decoupled `detect/` from heavy source dependencies** — Extracted `fragment/` package and moved display logic to `report/`, so library consumers importing `detect/` no longer pull in git, archive, and UI dependencies.
+
+---
+
 # Betterleaks
 
 Betterleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos, files, and whatever else you wanna throw at it via `stdin`. If you wanna learn more about how the detection engine works check out this blog: [Regex is (almost) all you need](https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need).
